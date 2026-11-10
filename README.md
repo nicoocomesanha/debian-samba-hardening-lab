@@ -36,24 +36,16 @@ Comprobación mediante `sudo ss -tulpn | grep smbd` confirmando que el demonio `
 
 ## 📁 Configuración de Recursos Compartidos y Permisos
 
-```ini
-[departamento]
-   comment = Recurso del Departamento Tecnico
-   path = /srv/samba/departamento
-   browseable = yes
-   guest ok = no
-   valid users = @dept_tecnico
-   read only = yes
-   write list = xefe1, xefe2
-   create mask = 0664
-   directory mask = 0775
+Definición de parámetros para los recursos `[departamento]` (acceso restringido a grupo técnico con permisos diferenciados) y `[publico]` (acceso invitado anónimo con permisos totales):
 
-[publico]
-   comment = Carpeta publica
-   path = /srv/samba/departamento/publico
-   browseable = yes
-   guest ok = yes
-   read only = no
-   force user = nobody
-   create mask = 0666
-   directory mask = 0777
+![Recursos Compartidos](./docs/images/03-recursos-compartidos.png)
+*Figura 3: Configuración de los recursos [departamento] y [publico] en smb.conf.*
+
+---
+
+## 🔀 Redirección NAT para Compatibilidad con Clientes Windows
+
+Dado que el cliente SMB del Explorador de Windows requiere el puerto 445 de forma nativa y no permite especificar puertos en sintaxis UNC, se implementó una regla de redirección a nivel de kernel en el servidor Debian mediante `iptables`:
+
+```bash
+sudo iptables -t nat -A PREROUTING -i enp0s3 -p tcp --dport 445 -j REDIRECT --to-ports 447
